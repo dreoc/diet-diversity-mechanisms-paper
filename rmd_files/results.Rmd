@@ -1,0 +1,443 @@
+## \hfil RESULTS\hfil
+
+We find clear differences in the representation of periods and habitat settings in the dataset, and not all groups are equally represented ($\chi^2$ =42.09, df =6, p <.00001, Cramer V =.321) (Table 1; Appendix 1). Based on standardized residuals from the $\chi^2$ analysis, alluvial valley settings are underrepresented and foothill and mountain localities overrepresented in the Paleoindian period, whereas, in the Archaic period, there is a slight underrepresentation of plains/grassland localities. Both the Woodland and Late Prehistoric periods show an overrepresentation of alluvial valley sites and an underrepresentation of foothills/mountains and plains and rolling hills habitats. The Late Prehistoric period also has an overrepresentation of sites in the plains and rolling hills. Given that this study explicitly considers the interaction between period and habitat, minor differences in habitat frequency over time should not significantly bias our results, especially since the sample size is adequate, at least for the Paleoindian, Archaic, and Late Prehistoric periods. At the same time, the very small size of the Woodland sample is problematic. Although the marginal means technique we outlined in the methods section can help with the sample size problem somewhat, we limited ourselves to making inferences about relatively larger samples (>10). Because of these sampling issues, we omit the standard error bars from some plots to show that the results come from small samples.
+
+Our Margalef and Simpson’s Index values are negatively related, with a statistically significant correlation of -.76. While the relationship is not linear, it is visually evident that if it were linearized, the correlation would be more substantial.
+
+
+```{r, echo=FALSE,message=FALSE, warning=FALSE}
+################################
+################################
+################################
+rm(list = ls())
+dat<-read.csv("./data/beta.reg.data_06_11_2020.csv")
+
+dat$Time.Group<-factor(dat$Time.Group, 
+                       levels = c("Paleoindian", "Archaic", "Woodland", "Late Prehistoric"))
+dat$Habitat<-as.character(dat$Habitat)
+dat$Habitat[which(dat$Habitat=="alluvial valley")]<-"valley"
+dat$Habitat[which(dat$Habitat=="foothills/mountain")]<-"foothills"
+dat$Habitat[which(dat$Habitat=="plains/rolling hills")]<-"plains"
+dat$Habitat<-factor(dat$Habitat, levels = c("plains", "valley", "foothills"))
+
+vari<-dat$Margalef
+dat$Margalef<-as.numeric((vari*(length(vari)-1)+.5)/length(vari))
+dat<-dat[-which(is.na(dat$Margalef)),]
+
+mod2<-glm(Margalef ~ Habitat * Time.Group,
+          data=dat, family = Gamma(link = "identity"))
+# summary(mod2)
+# Anova(mod2,type = "III")
+# png(filename = "Margalef.png",
+#     width = 687, height = 559, units = "px", pointsize = 12,
+#     bg = "white", res = NA, family = "", restoreConsole = TRUE,
+#     type = c("windows"))
+
+```
+
+
+```{r Margalef, echo=FALSE, message=FALSE, warning=FALSE,fig.width = 7, fig.asp = .75, fig.cap = "Estimates of mean Diversity Index (DMg) values of species (with 95% Confidence Intervals). This plot illustrates estimates across habitats (alluvial valleys, plains and rolling hills, and foothills and mountains) for the Paleoindian, Archaic, Woodland and Late Prehistoric periods. Means and confidence intervals were calculated using a Generalized Linear Model (GLM) and a gamma distribution. Estimates without CIs had small sample size (see text)."}
+source("./interaction.plot.mod.r")
+interaction.plot.mod(x.factor = dat$Time.Group,type="n",
+                 trace.factor = dat$Habitat,
+                 response = dat$Margalef, fun = mean,
+                 col = c("green","blue","red"),lty=c(1,2,3), trace.label = "Habitat"
+                 ,xlab = "Time Group", ylab="Margalef", ylim=c(0,3)
+)
+
+emsipm <- emmeans(mod2, ~ Habitat * Time.Group)
+
+xlim <- range(0,length(levels(dat$Time.Group)))
+xleg <- xlim[2L] + 0.05 * diff(xlim)
+ylim=c(0,3.1)
+yrng <- diff(ylim)
+yleg <- ylim[2L] - 0.1 * yrng
+    
+ylabs<-levels(dat$Habitat)
+trace.label = "Habitat"
+
+h<-seq(0,3.5,by=.5)
+for(i in 1: length(h) ){
+  segments(x0=0,y0=h[i], x1=4,y1=h[i], col="lightgray",lwd=.01)
+
+}
+abline(h=h, v=seq(0,4,by=1),col="lightgray", lwd=.01)
+# text(xleg, ylim[2L] - 0.05 * yrng, paste("  ", 
+#                                              trace.label), adj = 0)
+legend(xleg, yleg, legend = ylabs, col = c("green","blue","red"), pch = 19, bty = "o", 
+           bg = "white", lty = c(1,2,3), title = trace.label )
+
+me<-summary(emsipm)[,1:7]
+high<-me[,3] + me[,4]  
+low<-me[,3]  -me[,4] 
+me$sel<-low
+me$seh<-high
+
+segments(x0=1,y0=me[1,3], x1=2,y1=me[4,3], col="green",lwd=2)
+segments(x0=1,y0=me[2,3], x1=2,y1=me[5,3], col="blue", lty=2,lwd=2)
+segments(x0=1,y0=me[3,3], x1=2,y1=me[6,3], col="red", lty=3,lwd=2)
+
+segments(x0=2,y0=me[4,3], x1=3,y1=me[7,3], col="green",lwd=2)
+segments(x0=2,y0=me[5,3], x1=3,y1=me[8,3], col="blue", lty=2,lwd=2)
+segments(x0=2,y0=me[6,3], x1=3,y1=me[9,3], col="red", lty=3,lwd=2)
+
+segments(x0=3,y0=me[7,3], x1=4,y1=me[10,3], col="green",lwd=2)
+segments(x0=3,y0=me[8,3], x1=4,y1=me[11,3], col="blue", lty=2,lwd=2)
+segments(x0=3,y0=me[9,3], x1=4,y1=me[12,3], col="red", lty=3,lwd=2)
+
+# standard errors
+len<-.05 # this is the length of the horizontal line on top and bottom of SE line
+segments(x0=1,y0=low[1], x1=1,y1=high[1], col="green",lwd=2)
+segments(x0=1-len,y0=low[1], x1=1+len,y1=low[1], col="green",lwd=2)
+segments(x0=1-len,y0=high[1], x1=1+len,y1=high[1], col="green",lwd=2)
+
+segments(x0=1,y0=low[2], x1=1,y1=high[2], col="blue",lwd=2)
+segments(x0=1-len,y0=low[2], x1=1+len,y1=low[2], col="blue",lwd=2)
+segments(x0=1-len,y0=high[2], x1=1+len,y1=high[2], col="blue",lwd=2)
+
+segments(x0=1,y0=low[3], x1=1,y1=high[3], col="red",lwd=2)
+segments(x0=1-len,y0=low[3], x1=1+len,y1=low[3], col="red",lwd=2)
+segments(x0=1-len,y0=high[3], x1=1+len,y1=high[3], col="red",lwd=2)
+
+# segments(x0=2,y0=low[4], x1=2,y1=high[4], col="green",lwd=2) #n=2
+# segments(x0=2-len,y0=low[2], x1=2+len,y1=low[2], col="green",lwd=2)
+# segments(x0=2-len,y0=high[2], x1=2+len,y1=high[2], col="green",lwd=2)
+segments(x0=2,y0=low[5], x1=2,y1=high[5], col="blue",lwd=2)
+segments(x0=2-len,y0=low[5], x1=2+len,y1=low[5], col="blue",lwd=2)
+segments(x0=2-len,y0=high[5], x1=2+len,y1=high[5], col="blue",lwd=2)
+
+segments(x0=2,y0=low[6], x1=2,y1=high[6], col="red",lwd=2)
+segments(x0=2-len,y0=low[6], x1=2+len,y1=low[6], col="red",lwd=2)
+segments(x0=2-len,y0=high[6], x1=2+len,y1=high[6], col="red",lwd=2)
+
+# segments(x0=3,y0=low[7], x1=3,y1=high[7], col="green",lwd=2) #n=4
+# segments(x0=3-len,y0=low[7], x1=3+len,y1=low[7], col="green",lwd=2)
+# segments(x0=3-len,y0=high[7], x1=3+len,y1=high[7], col="green",lwd=2)
+
+segments(x0=3,y0=low[8], x1=3,y1=high[8], col="blue",lwd=2)
+segments(x0=3-len,y0=low[8], x1=3+len,y1=low[8], col="blue",lwd=2)
+segments(x0=3-len,y0=high[8], x1=3+len,y1=high[8], col="blue",lwd=2)
+
+# segments(x0=3,y0=low[9], x1=3,y1=high[9], col="red",lwd=2) #n=2
+# segments(x0=3-len,y0=low[9], x1=3+len,y1=low[9], col="red",lwd=2)
+# segments(x0=3-len,y0=high[9], x1=3+len,y1=high[9], col="red",lwd=2)
+
+segments(x0=4,y0=low[10], x1=4,y1=high[10], col="green",lwd=2)
+segments(x0=4-len,y0=low[10], x1=4+len,y1=low[10], col="green",lwd=2)
+segments(x0=4-len,y0=high[10], x1=4+len,y1=high[10], col="green",lwd=2)
+
+segments(x0=4,y0=low[11], x1=4,y1=high[11], col="blue",lwd=2)
+segments(x0=4-len,y0=low[11], x1=4+len,y1=low[11], col="blue",lwd=2)
+segments(x0=4-len,y0=high[11], x1=4+len,y1=high[11], col="blue",lwd=2)
+
+segments(x0=4,y0=low[12], x1=4,y1=high[12], col="red",lwd=2)
+segments(x0=4-len,y0=low[12], x1=4+len,y1=low[12], col="red",lwd=2)
+segments(x0=4-len,y0=high[12], x1=4+len,y1=high[12], col="red",lwd=2)
+
+points(rep(1,3),me[1:3,3], col=c("green", "blue","red"), pch=19)
+points(rep(2,3),me[4:6,3], col=c("green", "blue","red"), pch=19)
+points(rep(3,3),me[7:9,3], col=c("green", "blue","red"), pch=19)
+points(rep(4,3),me[10:12,3], col=c("green", "blue","red"), pch=19)
+
+# dev.off()
+#dev.off()
+```
+
+### \hfil Margalef Diversity Index\hfil
+
+The plains and rolling hills habitat during the Paleoindian period has the lowest Margalef Diversity Index value (D~Mg~ = 0.237 ± 0.056) observed for any time or habitat (Figure 4; Table 2). Margalef values for Paleoindian sites in alluvial valleys (D~Mg~ = 1.237 ± 0.276) and foothills and mountains (D~Mg~ = 0.700 ± 0.081) are significantly higher than for the plains and rolling hills (p = 0.0004 and p < 0.0001, respectively), but do not differ from each other.
+
+During the Archaic period, Margalef values for plains and rolling hills (D~Mg~ = 1.112± 0.556) more than quadruple during the Archaic period compared to the Paleoindian values. However, it must be noted that there are only two Archaic plains sites, so these results could be a function of the small sample size. There are slight declines in the Margalef values for alluvial valleys (D~Mg~ = 0.821± 0.116) and a slight increase for foothills and mountains (D~Mg~ = 0.826 ± 0.130). These values do not indicate a significant change in species richness from the Paleoindian period or significant differences between habitats.
+
+In the Woodland period, species richness values rise to their highest levels in plains and rolling hills (D~Mg~ = 1.510 ± 0.534), alluvial valleys (D~Mg~ = 1.406 ± 0.212), and foothills and mountains (D~Mg~ = 2.406 ± 1.202). However, this change represents a significant increase from the Archaic period only in alluvial valley settings. None of the differences between Woodland habitats are statistically significant, likely due to the very small sample sizes for the foothills/mountains and plains/rolling hills settings.
+	
+During the Late Prehistoric period, Margalef values decline from Woodland levels across habitats. One notable aspect of the Margalef values for the Late Prehistoric period is that there is no appreciable difference in species richness among habitats. The values for alluvial valley sites (D~Mg~ = 1.009 ± 0.102), foothills and mountains (D~Mg~ = 1.037 ± 0.196), and plains and rolling hills (D~Mg~ = 1.021 ± 0.1804) overlap extensively. In all regions, the values are uniformly low, suggesting that the diets of the Great Plains people at this time were focused on only a few species. 
+
+### \hfil Simpson's Index (1- D')\hfil 
+
+The foothills and mountains (1- D' = 0.243 ± 0.037) and plains and rolling hills (1- D'= 0.107 ± 0.034) settings during the Paleoindian period have the lowest Simpson's Index values for any period or habitat (Figure 5; Table 3). Simpson's Index values for alluvial valleys (1- D'= 0.580 ± 0.080) are significantly higher than for plains and rolling hills and for foothills and mountains (p=0.0001 and p<0.0001, respectively, which differ significantly from each other p=0.006).
+
+```{r message=FALSE, warning=FALSE, include=FALSE, paged.print=FALSE,message=FALSE, warning=FALSE}
+
+rm(list = ls())
+dat<-read.csv("./data/beta.reg.data_06_11_2020.csv")
+
+dat$Time.Group<-factor(dat$Time.Group, 
+                       levels = c("Paleoindian", "Archaic", "Woodland", "Late Prehistoric"))
+dat$Habitat<-as.character(dat$Habitat)
+dat$Habitat[which(dat$Habitat=="alluvial valley")]<-"valley"
+dat$Habitat[which(dat$Habitat=="foothills/mountain")]<-"foothills"
+dat$Habitat[which(dat$Habitat=="plains/rolling hills")]<-"plains"
+dat$Habitat<-factor(dat$Habitat, levels = c("plains", "valley", "foothills"))
+#head(dat)
+
+vari<-dat$Simp1minusD
+dat$Simp_1minusD<-as.numeric((vari*(length(vari)-1)+.5)/length(vari))
+if(length(is.na(dat$Simp_1minusD))>0){
+  dat<-dat[-which(is.na(dat$Simp_1minusD)==TRUE),]
+}
+
+mod1<-betareg(Simp_1minusD ~ Habitat * Time.Group,
+             data=dat)
+summary(mod1)
+Anova(mod1)
+
+#mod0<-brm(Simp_1minusD ~ Habitat * Time.Group,
+#              data=dat, family = "Beta"
+#           , chains = 2, iter=2000, warmup=100, cores = 2) # besure and change the #
+```
+
+```{r Inverse Simpson D,message=FALSE, warning=FALSE, echo=FALSE, fig.width = 7, fig.asp = .75, fig.cap = "Estimates of mean Simpson Index (1-D') values with 95% Confidence Intervals. This plot illustrates estimates across time and habitats (alluvial valleys, plains and rolling hills, and foothills and mountains) for the Paleoindian, Archaic, Woodland and Late Prehistoric periods. Means and confidence intervals were calculated using a Generalized Linear Model (GLM) using a beta distribution. Estimates without CIs had small sample size (see text)."}
+emsipm <- emmeans(mod1, ~ Habitat * Time.Group)
+
+source("./interaction.plot.mod.r")
+
+interaction.plot.mod(x.factor = dat$Time.Group, type="n",
+                 trace.factor = dat$Habitat,
+                 response = dat$Simp_1minusD, fun = mean,
+                 col = c("green","blue","red"),lty=c(1,2,3), trace.label = "Habitat"
+                 ,xlab = "Time Group", ylab="Simpson's 1-D", ylim=c(0,1),
+                 )
+xlim <- range(0,length(levels(dat$Time.Group)))
+xleg <- xlim[2L] + 0.05 * diff(xlim)
+ylim=c(0,1)
+yrng <- diff(ylim)
+yleg <- ylim[2L] - 0.1 * yrng
+    
+ylabs<-levels(dat$Habitat)
+trace.label = "Habitat"
+
+h<-seq(0,1,by=.05)
+for(i in 1: length(h) ){
+  segments(x0=0,y0=h[i], x1=4,y1=h[i], col="lightgray",lwd=.01)
+
+}
+abline(h=h, v=seq(0,4,by=1),col="lightgray", lwd=.01)
+# text(xleg, ylim[2L] - 0.05 * yrng, paste("  ", 
+#                                              trace.label), adj = 0)
+legend(xleg, yleg, legend = ylabs, col = c("green","blue","red"), pch = 19, bty = "o", 
+           bg = "white", lty = c(1,2,3), title = trace.label )
+
+me<-summary(emsipm)[,1:7]
+high<-me[,3]+me[,4] #*1.98
+low<-me[,3]-me[,4] #*1.98
+me$sel<-low
+me$seh<-high
+
+segments(x0=1,y0=me[1,3], x1=2,y1=me[4,3], col="green",lwd=2)
+segments(x0=1,y0=me[2,3], x1=2,y1=me[5,3], col="blue", lty=2,lwd=2)
+segments(x0=1,y0=me[3,3], x1=2,y1=me[6,3], col="red", lty=3,lwd=2)
+
+segments(x0=2,y0=me[4,3], x1=3,y1=me[7,3], col="green",lwd=2)
+segments(x0=2,y0=me[5,3], x1=3,y1=me[8,3], col="blue", lty=2,lwd=2)
+segments(x0=2,y0=me[6,3], x1=3,y1=me[9,3], col="red", lty=3,lwd=2)
+
+segments(x0=3,y0=me[7,3], x1=4,y1=me[10,3], col="green",lwd=2)
+segments(x0=3,y0=me[8,3], x1=4,y1=me[11,3], col="blue", lty=2,lwd=2)
+segments(x0=3,y0=me[9,3], x1=4,y1=me[12,3], col="red", lty=3,lwd=2)
+
+# standard errors
+len<-.05 # this is the length of the horizontal line on top and bottom of SE line
+segments(x0=1,y0=low[1], x1=1,y1=high[1], col="green",lwd=2)
+segments(x0=1-len,y0=low[1], x1=1+len,y1=low[1], col="green",lwd=2)
+segments(x0=1-len,y0=high[1], x1=1+len,y1=high[1], col="green",lwd=2)
+
+segments(x0=1,y0=low[2], x1=1,y1=high[2], col="blue",lwd=2)
+segments(x0=1-len,y0=low[2], x1=1+len,y1=low[2], col="blue",lwd=2)
+segments(x0=1-len,y0=high[2], x1=1+len,y1=high[2], col="blue",lwd=2)
+
+segments(x0=1,y0=low[3], x1=1,y1=high[3], col="red",lwd=2)
+segments(x0=1-len,y0=low[3], x1=1+len,y1=low[3], col="red",lwd=2)
+segments(x0=1-len,y0=high[3], x1=1+len,y1=high[3], col="red",lwd=2)
+
+#segments(x0=2,y0=low[4], x1=2,y1=high[4], col="green",lwd=2) #n=2
+# segments(x0=2-len,y0=low[2], x1=2+len,y1=low[2], col="green",lwd=2)
+# segments(x0=2-len,y0=high[2], x1=2+len,y1=high[2], col="green",lwd=2)
+segments(x0=2,y0=low[5], x1=2,y1=high[5], col="blue",lwd=2)
+segments(x0=2-len,y0=low[5], x1=2+len,y1=low[5], col="blue",lwd=2)
+segments(x0=2-len,y0=high[5], x1=2+len,y1=high[5], col="blue",lwd=2)
+
+segments(x0=2,y0=low[6], x1=2,y1=high[6], col="red",lwd=2)
+segments(x0=2-len,y0=low[6], x1=2+len,y1=low[6], col="red",lwd=2)
+segments(x0=2-len,y0=high[6], x1=2+len,y1=high[6], col="red",lwd=2)
+
+#segments(x0=3,y0=low[7], x1=3,y1=high[7], col="green",lwd=2) #n=4
+# segments(x0=3-len,y0=low[7], x1=3+len,y1=low[7], col="green",lwd=2)
+# segments(x0=3-len,y0=high[7], x1=3+len,y1=high[7], col="green",lwd=2)
+
+segments(x0=3,y0=low[8], x1=3,y1=high[8], col="blue",lwd=2)
+segments(x0=3-len,y0=low[8], x1=3+len,y1=low[8], col="blue",lwd=2)
+segments(x0=3-len,y0=high[8], x1=3+len,y1=high[8], col="blue",lwd=2)
+
+#segments(x0=3,y0=low[9], x1=3,y1=high[9], col="red",lwd=2) #n=2
+# segments(x0=3-len,y0=low[9], x1=3+len,y1=low[9], col="red",lwd=2)
+# segments(x0=3-len,y0=high[9], x1=3+len,y1=high[9], col="red",lwd=2)
+
+segments(x0=4,y0=low[10], x1=4,y1=high[10], col="green",lwd=2)
+segments(x0=4-len,y0=low[10], x1=4+len,y1=low[10], col="green",lwd=2)
+segments(x0=4-len,y0=high[10], x1=4+len,y1=high[10], col="green",lwd=2)
+
+segments(x0=4,y0=low[11], x1=4,y1=high[11], col="blue",lwd=2)
+segments(x0=4-len,y0=low[11], x1=4+len,y1=low[11], col="blue",lwd=2)
+segments(x0=4-len,y0=high[11], x1=4+len,y1=high[11], col="blue",lwd=2)
+
+segments(x0=4,y0=low[12], x1=4,y1=high[12], col="red",lwd=2)
+segments(x0=4-len,y0=low[12], x1=4+len,y1=low[12], col="red",lwd=2)
+segments(x0=4-len,y0=high[12], x1=4+len,y1=high[12], col="red",lwd=2)
+
+
+points(rep(1,3),me[1:3,3], col=c("green", "blue","red"), pch=19)
+points(rep(2,3),me[4:6,3], col=c("green", "blue","red"), pch=19)
+points(rep(3,3),me[7:9,3], col=c("green", "blue","red"), pch=19)
+points(rep(4,3),me[10:12,3], col=c("green", "blue","red"), pch=19)
+
+# dev.off()
+```
+
+Evenness values rise in both plains and rolling hills (1- D'= 0.255 ± 0.141) and foothills and mountains (1- D'= 0.416 ± 0.063) settings during the Archaic period, but drop in alluvial valley settings (1- D'= 0.279 ± 0.043). The changes from Paleoindian values are significant for both alluvial valleys (p=.0009) and foothills and mountains (p=.017); however, these two do not differ significantly from each other during this period. If we ignore the plains estimate because of sample size problems, evenness does statistically change between the Paleoindian and Archaic periods across all habitats.
+
+During the Woodland period, the Simpson's Index values rise across all habitats. The value for foothill and mountain sites (1- D'= 0.648 ± 0.168) reaches the highest value for any period or habitat, although this increase is reflective of just two sites. The values for the plains and rolling hills (1- D'= 0.537 ± 0.128) and alluvial valleys (1- D'= 0.524 ± 0.055) are almost the same, even though their sample sizes are quite different (4 vs. 22 sites, respectively). Only the increase in the value for alluvial valleys is significant compared to Archaic levels (p=.0009). There is no statistically significant difference across habitats at the 0.05 level, suggesting a similar, moderate representation of various taxa in the diets. However, we should emphasize that there is a notable increasing trend of species evenness during the Woodland period. 
+
+During the Late Prehistoric, Simpson's Index values for all habitats decrease from Woodland levels. As observed with the Margalef values, Simpson's Index values for alluvial valley sites (1- D'= 0.446 ± 0.037), foothills and mountains (1- D'= 0.422 ± 0.067), and plains and rolling hills (1- D'= 0.395 ± 0.062) overlap extensively and are not significantly different.
+
+### \hfil Large mammal Abundance Index (AI~lg~)\hfil
+
+During the Paleoindian period, AI~lg~ values are uniformly and moderately low (AI~lg~<.4) across all habitats, suggesting no significant differences in the use of large prey during this period (Figure 6). During the Archaic period, however, AI~lg~ values fall for plains and rolling hill sites compared to Paleoindian levels, whereas values rise in both the foothills and mountains and alluvial valleys. However, only the increase in AI~lg~ value (AI~lg~= 0.625 ± 0.059) for alluvial valleys (which reaches its highest level of any period) differs significantly from the Paleoindian period (p=.004), and from the Archaic values for foothills and mountains (p=0.004) and plains and rolling hills (p=0.003). During the Woodland period, AI~lg~ values drop significantly in alluvial valleys compared to the Archaic period (p=0.0006), but across habitats, there are no significant differences in AI~lg~ values. 
+
+As observed with the other analyses, during the Late Prehistoric period, AI~lg~ values are nearly identical across all habitats and at a generally higher level than in previous periods. Large prey seem to compose nearly 50% of the diets represented by faunal assemblages. This trend suggests that large-bodied fauna represented a large proportion of the animals hunted. These values reflect an increasing reliance on large prey compared to the Woodland period, although this increase is not significant. 
+
+```{r large index, echo=FALSE,message=FALSE, warning=FALSE}
+################################
+rm(list = ls())
+dat<-read.csv("./data/beta.reg.data_06_11_2020.csv")
+
+dat$Time.Group<-factor(dat$Time.Group, 
+                       levels = c("Paleoindian", "Archaic", "Woodland", "Late Prehistoric"))
+dat$Habitat<-as.character(dat$Habitat)
+dat$Habitat[which(dat$Habitat=="alluvial valley")]<-"valley"
+dat$Habitat[which(dat$Habitat=="foothills/mountain")]<-"foothills"
+dat$Habitat[which(dat$Habitat=="plains/rolling hills")]<-"plains"
+dat$Habitat<-factor(dat$Habitat, levels = c("plains", "valley", "foothills"))
+
+vari<-dat$Large.AI
+dat$LargeIND<-as.numeric((vari*(length(vari)-1)+.5)/length(vari))
+
+mod3<-betareg(LargeIND ~ Habitat * Time.Group,
+              data=dat)
+
+#mod3<-glm(LargeIND ~ Habitat * Time.Group, data=dat, family = Gamma(link = "identity"))
+
+
+```
+
+
+```{r figure8,message=FALSE, warning=FALSE, fig.width = 7, fig.asp = .75,echo=FALSE, fig.cap= "Estimates of mean Large Mammal Abundance Index (AI~lg~) values with 95% Confidence Intervals. This plot illustrates estimates across time and habitats (alluvial valleys, plains and rolling hills, and foothills and mountains) for the Paleoindian, Archaic, Woodland, and Late Prehistoric periods. Means and confidence intervals were calculated using a Generalized Linear Model (GLM) using a beta distribution. Estimates without CIs had small sample size (see text)."}
+
+source("./interaction.plot.mod.r")
+interaction.plot.mod(x.factor = dat$Time.Group,type="n",
+                 trace.factor = dat$Habitat,
+                 response = dat$LargeIND, fun = mean,
+                 col = c("green","blue","red"),lty=c(1,2,3), trace.label = "Habitat"
+                 ,xlab = "Time Group", ylab="LargeIND", ylim=c(0,1)
+)
+
+emlg <- emmeans(mod3, ~ Habitat * Time.Group)
+
+xlim <- range(0,length(levels(dat$Time.Group)))
+xleg <- xlim[2L] + 0.05 * diff(xlim)
+ylim=c(0,1)
+yrng <- diff(ylim)
+yleg <- ylim[2L] - 0.1 * yrng
+    
+ylabs<-levels(dat$Habitat)
+trace.label = "Habitat"
+
+h<-seq(0,1,by=.05)
+for(i in 1: length(h) ){
+  segments(x0=0,y0=h[i], x1=4,y1=h[i], col="lightgray",lwd=.01)
+
+}
+abline(h=h, v=seq(0,4,by=1),col="lightgray", lwd=.01)
+# text(xleg, ylim[2L] - 0.05 * yrng, paste("  ", 
+#                                              trace.label), adj = 0)
+legend(xleg, yleg, legend = ylabs, col = c("green","blue","red"), pch = 19, bty = "o", 
+           bg = "white", lty = c(1,2,3), title = trace.label )
+
+me<-summary(emlg)[,1:7]
+high<-me[,3]+me[,4] #*1.98
+low<-me[,3]-me[,4] #*1.98
+me$sel<-low
+me$seh<-high
+
+segments(x0=1,y0=me[1,3], x1=2,y1=me[4,3], col="green",lwd=2)
+segments(x0=1,y0=me[2,3], x1=2,y1=me[5,3], col="blue", lty=2,lwd=2)
+segments(x0=1,y0=me[3,3], x1=2,y1=me[6,3], col="red", lty=3,lwd=2)
+
+segments(x0=2,y0=me[4,3], x1=3,y1=me[7,3], col="green",lwd=2)
+segments(x0=2,y0=me[5,3], x1=3,y1=me[8,3], col="blue", lty=2,lwd=2)
+segments(x0=2,y0=me[6,3], x1=3,y1=me[9,3], col="red", lty=3,lwd=2)
+
+segments(x0=3,y0=me[7,3], x1=4,y1=me[10,3], col="green",lwd=2)
+segments(x0=3,y0=me[8,3], x1=4,y1=me[11,3], col="blue", lty=2,lwd=2)
+segments(x0=3,y0=me[9,3], x1=4,y1=me[12,3], col="red", lty=3,lwd=2)
+
+# standard errors
+len<-.05 # this is the length of the horizontal line on top and bottom of SE line
+segments(x0=1,y0=low[1], x1=1,y1=high[1], col="green",lwd=2)
+segments(x0=1-len,y0=low[1], x1=1+len,y1=low[1], col="green",lwd=2)
+segments(x0=1-len,y0=high[1], x1=1+len,y1=high[1], col="green",lwd=2)
+
+segments(x0=1,y0=low[2], x1=1,y1=high[2], col="blue",lwd=2)
+segments(x0=1-len,y0=low[2], x1=1+len,y1=low[2], col="blue",lwd=2)
+segments(x0=1-len,y0=high[2], x1=1+len,y1=high[2], col="blue",lwd=2)
+
+segments(x0=1,y0=low[3], x1=1,y1=high[3], col="red",lwd=2)
+segments(x0=1-len,y0=low[3], x1=1+len,y1=low[3], col="red",lwd=2)
+segments(x0=1-len,y0=high[3], x1=1+len,y1=high[3], col="red",lwd=2)
+
+#segments(x0=2,y0=low[4], x1=2,y1=high[4], col="green",lwd=2) #n=2
+# segments(x0=2-len,y0=low[2], x1=2+len,y1=low[2], col="green",lwd=2)
+# segments(x0=2-len,y0=high[2], x1=2+len,y1=high[2], col="green",lwd=2)
+segments(x0=2,y0=low[5], x1=2,y1=high[5], col="blue",lwd=2)
+segments(x0=2-len,y0=low[5], x1=2+len,y1=low[5], col="blue",lwd=2)
+segments(x0=2-len,y0=high[5], x1=2+len,y1=high[5], col="blue",lwd=2)
+
+segments(x0=2,y0=low[6], x1=2,y1=high[6], col="red",lwd=2)
+segments(x0=2-len,y0=low[6], x1=2+len,y1=low[6], col="red",lwd=2)
+segments(x0=2-len,y0=high[6], x1=2+len,y1=high[6], col="red",lwd=2)
+
+#segments(x0=3,y0=low[7], x1=3,y1=high[7], col="green",lwd=2) #n=4
+# segments(x0=3-len,y0=low[7], x1=3+len,y1=low[7], col="green",lwd=2)
+# segments(x0=3-len,y0=high[7], x1=3+len,y1=high[7], col="green",lwd=2)
+
+segments(x0=3,y0=low[8], x1=3,y1=high[8], col="blue",lwd=2)
+segments(x0=3-len,y0=low[8], x1=3+len,y1=low[8], col="blue",lwd=2)
+segments(x0=3-len,y0=high[8], x1=3+len,y1=high[8], col="blue",lwd=2)
+
+#segments(x0=3,y0=low[9], x1=3,y1=high[9], col="red",lwd=2) #n=2
+# segments(x0=3-len,y0=low[9], x1=3+len,y1=low[9], col="red",lwd=2)
+# segments(x0=3-len,y0=high[9], x1=3+len,y1=high[9], col="red",lwd=2)
+
+segments(x0=4,y0=low[10], x1=4,y1=high[10], col="green",lwd=2)
+segments(x0=4-len,y0=low[10], x1=4+len,y1=low[10], col="green",lwd=2)
+segments(x0=4-len,y0=high[10], x1=4+len,y1=high[10], col="green",lwd=2)
+
+segments(x0=4,y0=low[11], x1=4,y1=high[11], col="blue",lwd=2)
+segments(x0=4-len,y0=low[11], x1=4+len,y1=low[11], col="blue",lwd=2)
+segments(x0=4-len,y0=high[11], x1=4+len,y1=high[11], col="blue",lwd=2)
+
+segments(x0=4,y0=low[12], x1=4,y1=high[12], col="red",lwd=2)
+segments(x0=4-len,y0=low[12], x1=4+len,y1=low[12], col="red",lwd=2)
+segments(x0=4-len,y0=high[12], x1=4+len,y1=high[12], col="red",lwd=2)
+
+
+points(rep(1,3),me[1:3,3], col=c("green", "blue","red"), pch=19)
+points(rep(2,3),me[4:6,3], col=c("green", "blue","red"), pch=19)
+points(rep(3,3),me[7:9,3], col=c("green", "blue","red"), pch=19)
+points(rep(4,3),me[10:12,3], col=c("green", "blue","red"), pch=19)
+
+# dev.off()
+
+```
+
+

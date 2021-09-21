@@ -1,0 +1,130 @@
+---
+title: \vspace{4cm} **\Large Intensification Mechanisms Driving Dietary Change among the Great Plains Big
+  Game Hunters of North America**\vspace{1cm}
+date: "Last compiled on `r format(Sys.time(), '%A %B %d %Y, %X, %Z')`"
+author:
+  - \*Erik Otárola-Castillo$^1$
+  - Melissa G. Torquato$^1$
+  - \*Matthew E. Hill$^2$
+indent: yes
+header-includes:
+    - \usepackage{setspace}\doublespacing
+    - \usepackage[labelfont=bf,width=.8\textwidth]{caption}
+    - \captionsetup[figure]{labelfont=bf}
+    - \usepackage[pagewise]{lineno}
+output: 
+  pdf_document: 
+    latex_engine: xelatex
+  word_document: default
+  html_document:
+    df_print: paged
+link-citations: yes
+bibliography: IntensificationGreatPlainsRMarkdown.bib
+biblio-style: apalike
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+options(list(scipen=5, digits = 2))
+```
+
+```{r message=FALSE, warning=FALSE, include=FALSE, paged.print=FALSE}
+########################################
+# check for required packages          #
+########################################
+tinytex::install_tinytex()
+list.of.packages <- c("betareg", "MASS", "car", "emmeans", "brms", "dplyr", "tidyr", "stringr","ggplot2","knitr", "kableExtra", "tinytex")
+new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
+if(length(new.packages)) install.packages(new.packages)
+########################################
+# load packages                        #
+########################################
+require(kableExtra)
+require(tinytex)
+require(betareg)
+require(MASS)
+require(car)
+require(emmeans)
+require(brms)
+require(dplyr)
+require(tidyr)
+require(stringr)
+require(ggplot2)
+require(knitr)
+
+########################################
+# load LATEX files into temp dir       #
+########################################
+tempsty <- file.path(tempdir(), "unicode-math.sty")
+      file.copy("unicode-math.sty", tempsty, overwrite = TRUE)
+      tempxesty <- file.path(tempdir(), "unicode-math-xetex.sty")
+      file.copy("unicode-math-xetex.sty", tempxesty, overwrite = TRUE)
+      tempxesty1 <- file.path(tempdir(), "unicode-math-table.tex")
+      file.copy("unicode-math-table.tex", tempxesty, overwrite = TRUE)
+      tempxesty2 <- file.path(tempdir(), "unicode-math-luatex.sty")
+      file.copy("unicode-math-luatex.sty", tempxesty, overwrite = TRUE)
+
+```
+
+\noindent
+$^1$Department of Anthropology, Purdue University, West Lafayette, IN, USA, email:\href{mailto:eoc@purdue.edu}{\color{blue} \,eoc@purdue.edu}\newline
+$^2$Department of Anthropology, University of Iowa, Iowa City, IA, USA, email:\href{mailto:matthew-ehill@uiowa.edu}{\color{blue} \,matthew-e-hill@uiowa.edu}\newline
+
+\vspace{2.5cm}
+\textbf{*\*Corresponding Authors}
+
+\vspace{4cm}
+\noindent
+Manuscript in press: Defining and measuring diversity in archaeology. Forthcoming volume edited by M. Eren and B. Buchanan. Berghahn.  
+
+\linenumbers
+\newpage
+```{r child= "rmd_files/introduction.Rmd"}
+
+```
+\newpage
+```{r child= "rmd_files/section-1.Rmd"}
+
+```
+\newpage
+```{r child= "rmd_files/section-2.Rmd"}
+
+```
+\newpage
+```{r child= "rmd_files/section-3.Rmd"}
+
+```
+\newpage
+```{r child= "rmd_files/results.Rmd"}
+
+```
+\newpage
+```{r child= "rmd_files/discussion.Rmd"}
+
+```
+\newpage
+```{r child= "rmd_files/conclusion.Rmd"}
+
+```
+\newpage
+```{r child= "rmd_files/acknowledgments.Rmd"}
+
+```
+\newpage
+
+## \hfil REFERENCES CITED\hfil
+
+\parindent 0pt
+
+\parskip 1.5ex
+
+\onehalfspacing
+
+<div id="refs"></div>
+
+\newpage
+
+```{r child= "rmd_files/tables.Rmd"}
+
+```
+

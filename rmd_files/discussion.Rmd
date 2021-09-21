@@ -1,0 +1,167 @@
+
+## \hfil DISCUSSION\hfil
+ 
+As discussed earlier in this paper, the traditional view is that people on the Great Plains (and elsewhere) transitioned from hunting and gathering to farming through a mechanism of increasing resource intensification over time. In this study, we evaluated this hypothesis using a large dataset, finding no support for such a unidirectional intensification over time. Instead, the data show variability in the dietary diversification values, measured using the Margalef Diversity Index and Simpson's Index. Notably, these values do not increase uniformly over time. The results indicate that hunters on the Great Plains and in surrounding areas practiced flexible subsistence strategies. Their foraging and farming behaviors often varied in response to temporal and habitat differences in prey availability [e.g., @hill_variation_2008; @knell_linking_2012; @otarola-castillo_spatio-temporal_2016]. This study also sought to compare the Great Plains Paleoindian prey choice patterns we observed in our earlier work to evidence later in time. The data show that the patterns of faunal use found during the Paleoindian period are not consistent over time [@@hill_causes_2007a, @hill_moveable_2007b, @hill_variation_2008; @hill_cody_2013; @hill_cody_2013; @knell_linking_2012; @otarola-castillo_spatio-temporal_2016]. 
+
+There is a high degree of variability across components. For any period, individual assemblages may show richness and AI~lg~values that range from 0 to 1 and Margalef Diversity Index values that range between 0 and ~3.3 across habitats. In the broadest sense, both foragers and farmers preyed upon a modest number of species, often with one species numerically dominating the assemblage. The trend of low AI~lg~ values is an indication that large prey like bison were not necessarily the dominant prey in those diets. For the vast majority of time, however, large prey composed approximately 40% or less of the hunted diet, on average, across all habitats. Figures 7 and 8 directly compare Simpson's evenness and Margalef's richness values and the mean abundance of small, medium, and AI~lg~ values across time, differentiated by habitat. If one examines the temporal patterns, there are some intriguing changes, although they are not necessarily statistically significant. 
+
+Despite cooler, more variable climates and lower human population size than in later times, subsistence strategies during the Paleoindian period are not dramatically different from later periods (e.g., Figure 7). As we have shown previously, localities in the plains and rolling hills and in the foothills and mountains have very low average richness and evenness values [@hill_causes_2007a, @hill_moveable_2007b, @hill_variation_2008; @otarola-castillo_spatio-temporal_2016]. In terms of our expectations for diversification and specialization, the Paleoindian assemblages in the plains and rolling hills and foothills and mountains reflect a hyper-specialized (low richness/low evenness) subsistence strategy. The A.I. values indicate (Figure 8) that, under this specialized adaptation, hunters likely focused on either large prey or small prey in the plains and rolling hills. In the foothills and mountains, however, the specialization would have been directed toward procuring medium-sized prey. 
+
+Paleoindian localities in alluvial valleys exhibit a generalist profile. These assemblages possess moderate to high richness values and moderate to high evenness values. In terms of the body size of prey chosen in alluvial settings, the primary focus would have been on small prey mixed with modest contributions from large and medium-sized prey. 
+
+```{r bivariate, echo=FALSE,message=FALSE, warning=FALSE}
+################################
+rm(list = ls())
+dat<-read.csv("./data/beta.reg.data_06_11_2020.csv")
+dat$Time.Group<-factor(dat$Time.Group, 
+                       levels = c("Paleoindian", "Archaic", "Woodland", "Late Prehistoric"))
+dat$Habitat<-as.character(dat$Habitat)
+dat$Habitat[which(dat$Habitat=="alluvial valley")]<-"valley"
+dat$Habitat[which(dat$Habitat=="foothills/mountain")]<-"foothills"
+dat$Habitat[which(dat$Habitat=="plains/rolling hills")]<-"plains"
+dat$Habitat<-factor(dat$Habitat, levels = c("plains", "valley", "foothills"))
+
+dat.new<-dat
+
+vari<-dat.new$Simp1minusD
+dat.new$Simp1minusD<-as.numeric((vari*(length(vari)-1)+.5)/length(vari))
+if(length(is.na(dat.new$Simpson))>0){
+  dat.new<-dat.new[-which(is.na(dat.new$Simp1minusD)==TRUE),]
+}
+
+par(mfrow=c(1,1))
+#hist(dat.new$Simp1minusD)
+mod1<-betareg(Simp1minusD ~ Habitat * Time.Group,
+              data=dat.new)
+
+vari<-dat.new$Margalef
+dat.new$Margalef<-as.numeric((vari*(length(vari)-1)+.5)/length(vari))
+if(length(is.na(dat.new$Margalef))>0){
+  dat.new<-dat.new[-which(is.na(dat.new$Margalef)==TRUE),]
+}
+
+#hist(dat.new$Margalef)
+mod2<-glm(Margalef ~ Habitat * Time.Group,
+          data=dat.new, family = Gamma(link = "identity"))
+
+emsipm <- emmeans(mod1, ~ Habitat * Time.Group)
+emmarg <- emmeans(mod2, ~ Habitat * Time.Group)
+
+me_marg<-summary(emmarg)[,1:7]
+me_simp<-summary(emsipm)[,1:7]
+
+
+col<-rep("red", nrow(dat.new))
+col[which(dat.new$Habitat=="plains")]<-"dark green"
+col[which(dat.new$Habitat=="valley")]<-"blue"
+
+```
+
+
+```{r, echo=FALSE,message=FALSE, warning=FALSE, fig.width = 7, fig.asp = .75, fig.cap= "Bivariate plot exhibiting the variability in Margalef's Diversity index (DMg ) and Simpson Index (1-D′) values of site components in the three different habitats (alluvial valleys, plains and rolling hills, and foothills and mountains). Each panel separately illustrates the Paleoindian, Archaic, Woodland, and Late Prehistoric periods. Habitat means value with 95% Confidence Intervals are depicted for each habitat."}
+par(mfrow=c(2,2))
+for(i in 1:4){
+  block<-which(dat.new$Time.Group==levels(dat.new$Time.Group)[i])
+  plot(dat.new$Margalef[block], dat.new$Simp1minusD[block], 
+       col=col[block], xlab="Margalef", ylab=" Simpson 1-D",
+       xlim=c(0,max(dat.new$Margalef, na.rm = TRUE)),ylim=c(0,1),
+       axes = FALSE, type="n", main =levels(dat.new$Time.Group)[i])
+  axis(side=1, at=seq(0,4, by=.1))
+  axis(side=2, at=seq(0,1, by=.1))
+  
+  l<-seq(0,1, by=.2)
+  for(k in 1:length(l)){
+    segments(x0=0,y0=l[k], x1=max(dat.new$Margalef, na.rm = TRUE),
+             y1=l[k], col="lightgray", lty = 3)
+  }
+  
+  ll<-seq(0,3.5, by=.5)
+  for(k in 1:length(ll)){
+    segments(x0=ll[k],y0=0, x1=ll[k],
+             y1=max(dat.new$Simp1minusD, na.rm = TRUE), col="lightgray", lty = 3)
+  }
+  
+  segments(x0=0,y0=.5, x1=3.5,
+           y1=.5, col="dark gray", lwd=2)
+  
+  segments(x0=(max(dat.new$Margalef, na.rm = TRUE)/2),y0=0, x1=(max(dat.new$Margalef, na.rm = TRUE)/2),
+           y1=1, col="dark gray", lwd=2)
+  
+  points(dat.new$Margalef[block], dat.new$Simp1minusD[block], 
+         col=col[block])
+
+  mean_marg<-me_marg[which(me_marg$Time.Group==levels(dat.new$Time.Group)[i]),3]
+  mean_simp<-me_simp[which(me_simp$Time.Group==levels(dat.new$Time.Group)[i]),3]
+  points(cbind(mean_marg,mean_simp), col=c("dark green","blue", "red"), pch=19, cex=2)
+  
+  se_marg.h<-mean_marg + me_marg[which(me_marg$Time.Group==levels(dat.new$Time.Group)[i]),4]
+  se_marg.l<-mean_marg - me_marg[which(me_marg$Time.Group==levels(dat.new$Time.Group)[i]),4]
+  se_simp.h<-mean_simp + me_simp[which(me_simp$Time.Group==levels(dat.new$Time.Group)[i]),4]
+  se_simp.l<-mean_simp - me_simp[which(me_simp$Time.Group==levels(dat.new$Time.Group)[i]),4]
+  
+  coll<-c("dark green", "blue", "red")
+  for(j in 1:3){
+    segments(x0=mean_marg[j],y0=mean_simp[j], x1=mean_marg[j],y1=se_simp.l[j], col=coll[j], lwd = 2)
+    segments(x0=mean_marg[j],y0=mean_simp[j], x1=mean_marg[j],y1=se_simp.h[j], col=coll[j], lwd = 2)
+    segments(x0=mean_marg[j],y0=mean_simp[j], x1=se_marg.l[j],y1=mean_simp[j], col=coll[j], lwd = 2)
+    segments(x0=mean_marg[j],y0=mean_simp[j], x1=se_marg.h[j],y1=mean_simp[j], col=coll[j], lwd = 2)
+  }
+  
+  #if(i==2){
+    legend(2.35, .41, legend = c("Plains", "Valley", "Foothills"), 
+           col = coll, pch = 19, bty = "o", 
+           bg = "white", title = "Habitat" )
+   # }
+  
+ 
+}
+```
+
+
+
+```{r ,echo=FALSE, fig.height=6,fig.width = 11, fig.cap = "Stacked bar graph illustrating the variability in mean large-bodied Abundance Index ($AI_{lg}$), medium-bodied Abundance Index ($AI_{me}$), and small-bodied Abundance Index ($AI_{sm}$) for three different habitats (alluvial valleys, plains and rolling hills, and foothills and mountains) during the Paleoindian, Archaic, Woodland and Late Prehistoric periods."}
+
+dat <- read.csv("./data/beta.reg.data_06_11_2020.csv",encoding="UTF-8")
+dat2 <- setNames(aggregate(cbind(dat$Large.AI,dat$Medium.AI,dat$Small.AI) ~ dat$Time.Group + dat$Habitat, dat, sum),c("TimeGroup","Habitat","LargeAI","MediumAI","SmallAI")) %>% 
+  pivot_longer(c("SmallAI","MediumAI","LargeAI"), names_to= "AI", values_to="cases")
+dat2 <- dat2[order(dat2$Habitat,decreasing = TRUE),]
+gg <- ggplot(dat2, aes(x=Habitat, y=cases, fill = factor(AI, levels=c("SmallAI", "MediumAI", "LargeAI")))) +
+  geom_bar(position = "fill", stat = "identity",width=0.7) + xlab("")+ylab("")+
+  scale_y_continuous(labels = scales::percent) +
+  scale_fill_manual(values = c("#7c7c7d","#c45b26","#1770B8"))+
+  facet_grid(factor(TimeGroup, levels = c("Paleoindian", "Archaic", "Woodland", "Late Prehistoric"))~., scales="free",switch = "y")+
+  theme(
+    legend.position="bottom",
+    strip.text.y.left = element_text(angle = 0),
+    text = element_text(face = "bold"),
+    panel.background = element_rect(fill = NA),
+    panel.grid.major = element_line(colour = "grey90"),
+    legend.title = element_blank(),
+    strip.background = element_rect(fill = "white"),
+    panel.spacing = unit(1, "lines"),
+    strip.switch.pad.grid = unit(0.2, "lines"),
+    strip.switch.pad.wrap = unit(0, "lines"),
+    legend.box.spacing = unit(0, "lines"),
+    strip.placement = "outside")+
+  guides(fill = guide_legend(reverse = TRUE))+
+  coord_flip()
+
+plot(gg)
+```
+
+
+The results of this study also challenge the traditional notion that Paleoindian hunters were specialized hunters of big game such as proboscideans and bison [@frison_hunting_2001, @frison_survival_2004; @kornfeld_prehistoric_2010]. These foragers indeed had narrow diets, and, for sites in the plains and rolling hills, there is strong evidence of extensive use of large prey. However, in other settings, Paleoindians seem to have specialized in deer, mountain sheep, and small prey, such as rodents and turtles, or enjoyed a more diverse mixture of prey. This duality in subsistence strategies likely represents the environmental constraints under which Paleoindian hunters lived; the proverbial “When in Rome” aphorism seems to be an appropriate moniker for Paleoindian subsistence strategies. Indeed, the ability of Paleoindian foragers to maintain flexible strategies enabled them to shift between degrees of specialization and prey types depending on the setting.
+
+There is a noticeable paucity of Archaic sites from the plains and rolling hills in our sample. This gap likely reflects the well-documented erosion of upland surfaces and small alluvial valleys of the Great Plains during the middle Holocene [e.g., @bettis_iii_effects_2002; @robertson_reassessing_2011]. Therefore, even though the Archaic sites in the plains and rolling hills show high species richness and evenness, it is difficult to ascertain whether these findings are representative for the Archaic period. We have greater confidence in our results for the foothill and mountain and alluvial valley settings, since the sample sizes are better. In general, our data show that the diets in Archaic plains and foothill sites were richer and slightly more even compared to the Paleoindian period; in alluvial settings, diets were less rich and even compared to earlier times. While a few sites have high Simpson and Margalef values, Archaic hunters seem to have maintained a hyper-specialized diet profile, such as in the very high use of large prey in alluvial valley settings. Surprisingly, the very few plains and rolling hill sites show a dominance of small prey, whereas, in the foothills and mountains, medium-sized prey were dominant. 
+
+Because of the widespread climatic drying during the middle Holocene, we expected significant declines in the natural abundance of large-bodied fauna. @hill_late_2008 demonstrated that bison experienced a significant reduction in body size during this period, which is consistent with the high levels of climatic stress and reduced quality of forage. Accordingly, people’s low reliance on large-bodied fauna during this time was likely tied to the reduced abundance of large prey in dry grassland habitats. We should note, however, that hunters in the foothills and mountains and alluvial valleys maintained a specialized dietary focus on large and medium prey. We take this as an indication that large and medium prey populations were relatively abundant, at least during specific periods. Alluvial valleys were likely always a common location for human residents and prey to go to get water. Given the increased temperatures and drought conditions during parts of the Archaic period, these habitats may have acted as refugia, tethering humans and prey to reliable water sources. Mountain springs and surface water sources may have been adequate to support medium-sized prey for humans to hunt. Human population sizes across the Plains and in adjacent regions at this time were likely modest. As such, there is a low probability that humans could have depleted the large and medium-sized prey populations to the extent that foragers would have been forced to significantly broaden their diets. 
+
+By the Woodland period, the climate ameliorated and became more grass-friendly, for example, with an apparent increase in precipitation levels. These changes could also have caused the size and number of bison herds to increase from middle Holocene levels. Archaeologists’ identification of large bison jump sites across the Great Plains supports the notion that bison herds were at least occasionally quite large. However, the Woodland period was also a time of significant technological, social, and adaptive changes in the Great Plains, with the appearance of an incipient horticulture and increased sedentism in alluvial valleys. Developments in ceramic technology served to increase the efficiency and productivity of cooking plant resources. There is evidence of an increase in permanent human presence in the alluvial valleys. We imagine that human populations were growing at unprecedented rates during the Woodland period. However, even in the absence of population growth, decreased mobility during this period would have amplified hunting pressure on large prey populations. At the very least, sedentism likely limited hunters’ ability to easily move to where bison were abundant. As a result, lower ranked, but locally abundant smaller prey likely became more attractive to many Woodland hunters. 
+
+As we expected, all these changes brought about modest reorganizations to the structure of faunal procurement. We must, however, acknowledge the potential effect of sampling problems. Our most rigorous sample for the Woodland period comes from alluvial valley sites. Overall, all sites move away from the hyper-specialized adaptation seen during the Archaic period toward a more generalized strategy (Figure 7). If the small sample of site components in the foothills and mountains is indeed representative, then some foragers might be classified as hyper-generalists. This strategy requires increases in the richness and evenness of prey selection over their values during the Archaic period. At this time, due to sample sizes, the best inferences come from alluvial settings. If we focus on prey size choice, Woodland hunters seem to have significantly reduced the number of large prey and increased the diversity of small prey compared to the Archaic period. 
+
+Our results show a dearth of habitat differences in terms of faunal use during the Late Prehistoric period (Figure 7). In effect, dietary diversity, evenness, and reliance on large prey are nearly identical across habitats. Most diets appear to have been hyper-specialized, with a uniform, moderately strong reliance on the use of bison. The data suggest that the inclusion of medium-sized prey in the diet was generally modest, while people were making moderate use of small prey; numerically, this use is only slightly lower than that of large prey (Figure 8). 
+
+The Late Prehistoric period saw significant increases in population size and sedentism. We expected the high population growth to exert increased hunting pressure and subsequently deplete local bison abundance. The reduction of local game animals is logical, especially in areas where Late Prehistoric people created large residential settlements. However, the relatively high use of bison found during the Late Prehistoric period suggests that people utilized some kind of mechanism to offset declines in availability. We believe that these people implemented changes in procurement strategies and technologies. In the Northwestern Plains, for example, large mass kills and jumps were used during this period. It is likely that in specific places, and at least seasonally, hunters increased their use of specialized procurement techniques to obtain substantial quantities of bison food products. Of course, jump kills do not characterize bison hunting everywhere on the Plains. However, if logistical, perhaps even modest-sized cooperative hunts were undertaken seasonally, scheduled around people’s essential agricultural pursuits. If so, there could have been an increased supply of large prey-animals, even in the face of decreasing local availability. 
+
+Late Prehistoric people used small prey, such as rodents, fish, and birds, in proportions similar to bigger animals, probably because these prey were attracted to settlements and thus became locally abundant. Unlike bison hunts, which were likely planned and sometimes communal undertakings, various members of society (young and old individuals, as well as men, women, and children) could have participated in the collection of small prey, perhaps even while undertaking other activities, such as tending agricultural fields or collecting wood or water. 

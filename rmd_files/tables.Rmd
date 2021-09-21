@@ -1,0 +1,102 @@
+## TABLES
+
+
+\begin{table}[h]
+\centering
+\caption{Site frequency by time period and habitat setting.}
+\label{tab:my-table1}
+\begin{tabular}{lcccc}
+\hline
+Setting                  & Paleoindian     & Archaic    & Woodland    & Late Prehistoric     \\ \hline
+Alluvial Valleys         & 11              & 25         & 22          & 48                   \\
+Foothills/Mountains      & 29              & 20         & 2           & 14                   \\
+Plains/Rolling Hills     & 11              & 2          & 4           & 16                   \\ \hline
+\multicolumn{4}{l}{Χ=42.09, df=6, p\textless{}.0001, Cramer V = .321} & \multicolumn{1}{l}{}
+\end{tabular}
+\end{table}
+
+\vspace{2cm}
+\begin{table}[h]
+\centering
+\caption{Mean Margalef D$_{\text{mg}}$ values (and standard errors) by time period and habitat setting, calculated using a Generalized Linear Model with Gamma function.}
+\label{tab:my-table2}
+\begin{tabular}{lcccc}
+\hline
+Setting              & Paleoindian & Archaic    & Woodland    & Late Prehistoric \\ \hline
+Alluvial Valleys     & 1.24 (.28)  & .82 (.12)  & 1.41 (.21)  & 1.01 (.10)       \\
+Foothills/Mountains  & .70 (.08)   & .83 (.13)  & 2.41 (1.20) & 1.04 (.20)       \\
+Plains/Rolling Hills & .24 (.06)   & 1.11 (.56) & 1.51 (.53)  & 1.02 (.18)       \\ \hline
+\end{tabular}
+\end{table}
+
+\vspace{2cm}
+\begin{table}[h]
+\centering
+\caption{Mean Simpon' s Index 1-D' values (and standard errors) by time period and habitat setting, calculated using Beta Regression.}
+\label{tab:my-table3}
+\begin{tabular}{lcccc}
+\hline
+Setting              & Paleoindian & Archaic   & Woodland  & Late Prehistoric \\ \hline
+Alluvial Valleys     & .58 (.08)   & .28 (.04) & .52 (.05) & .42 (.07)        \\
+Foothills/Mountains  & .24 (.04)   & .42 (.06) & .65 (.17) & .45 (.04)        \\
+Plains/Rolling Hills & .11 (.03)   & .26 (.14) & .54 (.13) & .40 (.06)        \\ \hline
+\end{tabular}
+\end{table}
+
+\vspace{2cm}
+\begin{table}[h!]
+\centering
+\caption{Mean Large-Bodied Abundance Index (AI) values (and standard errors) by time period and habitat setting, calculated using Beta Regression.}
+\label{tab:my-table4}
+\begin{tabular}{lcccc}
+\hline
+Setting              & Paleoindian & Archaic   & Woodland  & Late Prehistoric \\ \hline
+Alluvial Valleys     & .33 (.08)   & .63 (.06) & .34 (.06) & .47 (.05)        \\
+Foothills/Mountains  & .26 (.04)   & .37 (.07) & .43 (.22) & .44 (.08)        \\
+Plains/Rolling Hills & .39 (.09)   & .20 (.13) & .22 (.10) & .47 (.08)        \\ \hline
+\end{tabular}
+\end{table}
+
+
+\newgeometry{left=1mm, right=1mm, top=5.00mm, bottom=3.00mm}
+
+\newpage
+
+##      APENDIX
+\begin{table}[h]
+\centering
+\caption*{Summary Information for Archaeological Sites used in this study.}
+\label{tab:my-table5}
+\begin{tabular}{l}
+
+\end{tabular}
+\end{table}
+
+```{r echo=FALSE}
+
+dat <- read.csv("./data/beta.reg.data_06_11_2020.csv",encoding="UTF-8")
+str_sub(dat$'Habitat') <- str_sub(dat$'Habitat') %>% str_to_title() %>% {gsub('\\b(\\pL)\\pL{2,}|.','\\U\\1',.,perl = TRUE)}
+str_sub(dat$'Time.Group') <- str_sub(dat$'Time.Group') %>% str_to_title() %>% {gsub('\\b(\\pL)\\pL{2,}|.','\\U\\1',.,perl = TRUE)}
+dat$'Margalef' <- round(as.numeric(dat$'Margalef'),2)
+colnames(dat) <- c("SITE", "Component","Habitat","Time Group","Total NISP", "Species Count","Margalef Dmg", "Simpon's 1-D'","Large AI", "Medium AI", "Small AI")
+
+dat %>%
+  mutate_all(linebreak) %>%
+  kable(format = "latex",
+        longtable = T,
+        align=c("l","l",rep("c", 9)),
+        col.names = linebreak(c("SITE", "Component","Habitat","Time Group","Total NISP", "Species Count","Margalef Dmg", "Simpon's 1-D'","Large AI", "Medium AI", "Small AI"), align = "c")) %>% 
+    kable_styling(latex_options = c("repeat_header"),
+                  font_size = 7,
+                  position = "center") %>%
+    column_spec(1, width = "2.4cm",border_left = T) %>%
+    column_spec(2, width = "2.4cm") %>%
+    column_spec(c(3:10), width = "1.2cm") %>%
+    column_spec(11,width = "1.2cm",border_right = T) %>%
+    row_spec(0, bold = T)
+
+```
+
+
+\restoregeometry
+
